@@ -30,7 +30,8 @@ HELP = (
     "• вычитать вашу статью;\n"
     "• формулировки для интерфейса: кнопки, сообщения, пустые состояния (можно со скриншотом);\n"
     "• картинку по описанию или доработку присланной.\n\n"
-    "Команды: /reset — начать диалог заново, /version — версия, /update — обновиться из репозитория."
+    "Команды: /reset — начать диалог заново, /version — версия, "
+    "/update — обновиться из репозитория (только администраторы бота)."
 )
 
 TG_LIMIT = 4000
@@ -63,6 +64,11 @@ def is_authorized(chat_id: int | None, user_id: int | None, cfg: Config) -> bool
     if chat_id != cfg.chat_id or user_id is None:
         return False
     return not cfg.user_ids or user_id in cfg.user_ids
+
+
+def is_admin(user_id: int | None, cfg: Config) -> bool:
+    """Админы: /update и будущие команды загрузки данных и артефактов. Пустой список = никто."""
+    return user_id is not None and user_id in cfg.admin_ids
 
 
 class MarketeerBot:
@@ -202,6 +208,9 @@ class MarketeerBot:
 
     async def cmd_update(self, update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> None:
         if not self._auth(update):
+            return
+        if not is_admin(update.effective_user.id, self.cfg):
+            await update.message.reply_text("Обновлять бота могут только его администраторы.")
             return
         local, remote = await self.updater.check()
         if remote is None:

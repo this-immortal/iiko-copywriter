@@ -11,6 +11,8 @@
   MARKETEER_BOT_TOKEN      токен бота от @BotFather
   MARKETEER_CHAT_ID        id группы            (узнать: --discover)
   MARKETEER_USER_IDS       необязательно: id людей через запятую, если отвечать не всем в чате
+  MARKETEER_ADMIN_IDS      id администраторов бота через запятую: им доступна /update и
+                           будущие команды загрузки данных и артефактов
   CLAUDE_CODE_OAUTH_TOKEN  токен подписки Claude: команда `claude setup-token`
   GEMINI_API_KEY           ключ Gemini (картинки)
   YANDEX_API_KEY           ключ Яндекса (вычитка)
@@ -109,6 +111,7 @@ def server_env(env: dict[str, str]) -> str:
         "TELEGRAM_BOT_TOKEN": env["MARKETEER_BOT_TOKEN"],
         "ALLOWED_CHAT_ID": env["MARKETEER_CHAT_ID"],
         "ALLOWED_USER_IDS": env.get("MARKETEER_USER_IDS", ""),
+        "ADMIN_USER_IDS": env.get("MARKETEER_ADMIN_IDS", ""),
         "CLAUDE_CODE_OAUTH_TOKEN": env["CLAUDE_CODE_OAUTH_TOKEN"],
         "GEMINI_API_KEY": env["GEMINI_API_KEY"],
         "YANDEX_API_KEY": env["YANDEX_API_KEY"],

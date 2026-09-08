@@ -26,6 +26,7 @@ class Config:
     user_ids: set[int]
     repo_dir: Path
     data_dir: Path
+    admin_ids: set[int] = field(default_factory=set)
     model: str = "claude-opus-5"
     max_turns: int = 30
     timeout_sec: int = 900
@@ -51,6 +52,7 @@ class Config:
             token=env["TELEGRAM_BOT_TOKEN"],
             chat_id=int(env["ALLOWED_CHAT_ID"]),
             user_ids=user_ids,
+            admin_ids=_ids(env.get("ADMIN_USER_IDS", "")),
             repo_dir=Path(env.get("REPO_DIR", "/work/repo")),
             data_dir=Path(env.get("DATA_DIR", "/work/data")),
             model=env.get("CLAUDE_MODEL", "claude-opus-5"),
@@ -71,6 +73,7 @@ class Config:
         rows = [
             ("chat_id", self.chat_id),
             ("user_ids", ", ".join(str(u) for u in sorted(self.user_ids)) or "все участники чата"),
+            ("admin_ids", ", ".join(str(u) for u in sorted(self.admin_ids)) or "не заданы (/update недоступна)"),
             ("repo_dir", f"{self.repo_dir} ({'есть' if self.repo_dir.is_dir() else 'нет'})"),
             ("data_dir", f"{self.data_dir} ({'есть' if self.data_dir.is_dir() else 'нет'})"),
             ("model", self.model),

@@ -19,6 +19,7 @@ deploy/install.sh 1.2.3.4 -p 'пароль_root'
 ```
 MARKETEER_BOT_TOKEN=123456:ABC...      # токен от @BotFather
 MARKETEER_CHAT_ID=-1001234567890       # id группы; бот отвечает всем её участникам
+MARKETEER_ADMIN_IDS=11111111           # администраторы бота: /update и будущие команды загрузки
 CLAUDE_CODE_OAUTH_TOKEN=...            # результат команды `claude setup-token`
 GEMINI_API_KEY=...                     # картинки
 YANDEX_API_KEY=...                     # вычитка статей
