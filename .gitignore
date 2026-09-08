@@ -1,5 +1,6 @@
 # secrets
 .env
+.secrets
 *.env
 !*.env.example
 
@@ -17,3 +18,9 @@ venv/
 # runtime
 *.log
 .venv/
+
+# bot runtime / deploy
+deploy/local.env
+outputs/
+uploads/
+deploy/.venv/

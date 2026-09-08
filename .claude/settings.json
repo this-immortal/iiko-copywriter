@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Bash(python3 .claude/skills/*)",
+      "Bash(ls *)"
+    ],
+    "deny": [
+      "Bash(git *)",
+      "Bash(rm *)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(pip *)",
+      "Bash(npm *)",
+      "Bash(env*)",
+      "Bash(printenv*)",
+      "WebFetch",
+      "WebSearch"
+    ]
+  },
+  "env": {
+    "DISABLE_AUTOUPDATER": "1"
+  }
+}

@@ -1,0 +1,24 @@
+# Юнит systemd --user для пользователя бота. Ставится install.sh в ~/.config/systemd/user/.
+[Unit]
+Description=iiko marketeer bot (podman)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Restart=always
+RestartSec=5
+TimeoutStopSec=60
+ExecStartPre=-/usr/bin/podman rm -f marketeer
+ExecStart=/usr/bin/podman run --rm --name marketeer \
+    --userns=keep-id \
+    --env-file %h/app/.env \
+    -e DATA_DIR=/work/data -e REPO_DIR=/work/repo -e GIT_REPO_DIR=/app/repo \
+    -v %h/app/repo:/app/repo \
+    -v %h/app/repo:/work/repo:ro \
+    -v %h/app/data:/work/data \
+    -v %h/app/deploy_key:/run/secrets/deploy_key:ro \
+    localhost/marketeer:latest
+ExecStop=/usr/bin/podman stop -t 30 marketeer
+
+[Install]
+WantedBy=default.target

@@ -96,13 +96,14 @@ ro в `/work/repo` как рабочий каталог Claude. Так моде�
 Бот → супервизор: код выхода 0 (штатно), 75 (обновись), иное (упал).
 Супервизор → бот: `state.json` перед стартом.
 
-Ноутбук → VPS (`install.sh`): читает `deploy/local.env` (в .gitignore: хост,
-root, токен бота, id чата и людей, токен подписки), ключи Gemini и Яндекса
-берёт из `~/.config/nano-banana/.env`. `--bootstrap` идёт под root один раз,
-обычный запуск идёт под `marketeer` в `~/app` и идемпотентен: обновляет
-`.env`, пересобирает образ, если изменился `Containerfile`, перезапускает.
-Юнит `systemd --user` запускает `podman run` в foreground: так работает и на
-Ubuntu 22.04 с podman 3.4, где нет quadlet.
+Ноутбук → VPS (`deploy/install.py`, paramiko): IP и пароль root
+параметрами, всё остальное из `~/.config/nano-banana/.env` (строки с
+префиксом `MARKETEER_` плюс общие ключи). Заходит только под root, команды
+пользователя `marketeer` гоняет через `runuser -l`. Первый запуск делает
+bootstrap (podman, пользователь, linger), дальше идемпотентно: код архивом
+с ноутбука или `fetch` из GitHub, `.env`, образ (если изменился
+`Containerfile`), юнит. Юнит `systemd --user` запускает `podman run` в
+foreground: так работает и на Ubuntu 22.04 с podman 3.4, где нет quadlet.
 
 ## Что рассмотрели и отвергли
 

@@ -1,0 +1,3 @@
+python-telegram-bot>=21,<23
+markdown>=3.5
+weasyprint>=60 ; platform_system == "Linux"
