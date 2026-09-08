@@ -46,7 +46,7 @@ CLAUDE.md       роль, куда класть результаты, ссылк
 
 | Функция v2 | Что делаем |
 |---|---|
-| `is_authorized`, `extract_prompt` | берём как есть, чат один, белый список обязателен |
+| `is_authorized`, `extract_prompt` | берём как есть; чат один, белый список людей необязателен (пустой = все в чате) |
 | `run_claude` | берём; убираем `SHOW_COST` (подписка), модель одна, добавляем `--add-dir` для `outputs/` |
 | `SESSIONS: dict[chat_id]` | ключ меняем на `user_id`, кладём в `sessions.json` с таймстампом, срок 8 ч |
 | `download_file`, `snapshot_outputs`, `send_new_outputs`, `cleanup_outputs` | берём; PNG и PDF шлём как документ, `.md` тоже |

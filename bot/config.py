@@ -45,9 +45,8 @@ class Config:
         missing = [k for k in ("TELEGRAM_BOT_TOKEN", "ALLOWED_CHAT_ID") if not env.get(k)]
         if missing:
             raise SystemExit("Не заданы переменные: " + ", ".join(missing))
+        # Пустой ALLOWED_USER_IDS = отвечаем всем участникам чата.
         user_ids = _ids(env.get("ALLOWED_USER_IDS", ""))
-        if not user_ids:
-            raise SystemExit("ALLOWED_USER_IDS пуст: бот никому не ответит.")
         return cls(
             token=env["TELEGRAM_BOT_TOKEN"],
             chat_id=int(env["ALLOWED_CHAT_ID"]),
@@ -71,7 +70,7 @@ class Config:
         """Конфиг для глаз: без токена, с проверкой каталогов."""
         rows = [
             ("chat_id", self.chat_id),
-            ("user_ids", ", ".join(str(u) for u in sorted(self.user_ids))),
+            ("user_ids", ", ".join(str(u) for u in sorted(self.user_ids)) or "все участники чата"),
             ("repo_dir", f"{self.repo_dir} ({'есть' if self.repo_dir.is_dir() else 'нет'})"),
             ("data_dir", f"{self.data_dir} ({'есть' if self.data_dir.is_dir() else 'нет'})"),
             ("model", self.model),

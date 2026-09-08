@@ -18,8 +18,7 @@ deploy/install.sh 1.2.3.4 -p 'пароль_root'
 
 ```
 MARKETEER_BOT_TOKEN=123456:ABC...      # токен от @BotFather
-MARKETEER_CHAT_ID=-1001234567890       # id группы
-MARKETEER_USER_IDS=11111111,22222222   # кто может давать задания
+MARKETEER_CHAT_ID=-1001234567890       # id группы; бот отвечает всем её участникам
 CLAUDE_CODE_OAUTH_TOKEN=...            # результат команды `claude setup-token`
 GEMINI_API_KEY=...                     # картинки
 YANDEX_API_KEY=...                     # вычитка статей
@@ -33,7 +32,8 @@ YANDEX_PROMPT_ID=...                   # id промпта агента-реда
 В @BotFather отключите Group Privacy (`/setprivacy` → Disable), иначе бот не
 увидит ответы на свои сообщения.
 
-Необязательные строки: `MARKETEER_HOST` (чтобы не писать IP),
+Необязательные строки: `MARKETEER_USER_IDS` (id через запятую, если отвечать
+только некоторым участникам), `MARKETEER_HOST` (чтобы не писать IP),
 `MARKETEER_ROOT_PASSWORD` (чтобы не спрашивал пароль), `MARKETEER_GIT_SSH`
 (см. ниже), `CLAUDE_MODEL`, `CLAUDE_MAX_TURNS`, `SESSION_TTL_HOURS`,
 `UPDATE_CHECK_MIN`.

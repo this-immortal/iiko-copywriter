@@ -41,9 +41,17 @@ def test_empty_caption_with_mention_gives_empty_string():
     assert extract_prompt("@iiko_bot", [ent("mention", 0, 9)], "iiko_bot", 1) == ""
 
 
-def test_authorized():
+def test_authorized_with_whitelist():
     cfg = NS(chat_id=-100, user_ids={1, 2})
     assert is_authorized(-100, 1, cfg)
     assert not is_authorized(-100, 3, cfg)
+    assert not is_authorized(5, 1, cfg)
+    assert not is_authorized(-100, None, cfg)
+
+
+def test_authorized_everyone_in_chat_when_whitelist_empty():
+    cfg = NS(chat_id=-100, user_ids=set())
+    assert is_authorized(-100, 1, cfg)
+    assert is_authorized(-100, 999, cfg)
     assert not is_authorized(5, 1, cfg)
     assert not is_authorized(-100, None, cfg)

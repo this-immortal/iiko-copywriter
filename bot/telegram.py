@@ -58,7 +58,10 @@ def extract_prompt(text: str | None, entities, bot_username: str, bot_id: int,
 
 
 def is_authorized(chat_id: int | None, user_id: int | None, cfg: Config) -> bool:
-    return chat_id == cfg.chat_id and user_id is not None and user_id in cfg.user_ids
+    """Только наш чат. Белый список людей необязателен: пустой значит «все в чате»."""
+    if chat_id != cfg.chat_id or user_id is None:
+        return False
+    return not cfg.user_ids or user_id in cfg.user_ids
 
 
 class MarketeerBot:

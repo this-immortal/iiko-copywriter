@@ -10,7 +10,7 @@
 
   MARKETEER_BOT_TOKEN      токен бота от @BotFather
   MARKETEER_CHAT_ID        id группы            (узнать: --discover)
-  MARKETEER_USER_IDS       id людей через запятую (узнать: --discover)
+  MARKETEER_USER_IDS       необязательно: id людей через запятую, если отвечать не всем в чате
   CLAUDE_CODE_OAUTH_TOKEN  токен подписки Claude: команда `claude setup-token`
   GEMINI_API_KEY           ключ Gemini (картинки)
   YANDEX_API_KEY           ключ Яндекса (вычитка)
@@ -52,7 +52,6 @@ EXCLUDE = {".venv", "__pycache__", "outputs", "uploads", ".DS_Store", ".pytest_c
 REQUIRED = {
     "MARKETEER_BOT_TOKEN": "токен бота от @BotFather",
     "MARKETEER_CHAT_ID": "id группы (посмотреть: --discover)",
-    "MARKETEER_USER_IDS": "id людей через запятую (посмотреть: --discover)",
     "CLAUDE_CODE_OAUTH_TOKEN": "токен подписки Claude: выполните `claude setup-token`",
     "GEMINI_API_KEY": "ключ Gemini",
     "YANDEX_API_KEY": "ключ Яндекса",
@@ -102,7 +101,7 @@ def server_env(env: dict[str, str]) -> str:
     rows = {
         "TELEGRAM_BOT_TOKEN": env["MARKETEER_BOT_TOKEN"],
         "ALLOWED_CHAT_ID": env["MARKETEER_CHAT_ID"],
-        "ALLOWED_USER_IDS": env["MARKETEER_USER_IDS"],
+        "ALLOWED_USER_IDS": env.get("MARKETEER_USER_IDS", ""),
         "CLAUDE_CODE_OAUTH_TOKEN": env["CLAUDE_CODE_OAUTH_TOKEN"],
         "GEMINI_API_KEY": env["GEMINI_API_KEY"],
         "YANDEX_API_KEY": env["YANDEX_API_KEY"],
@@ -145,10 +144,10 @@ def discover(token: str) -> None:
     print("Чаты:")
     for cid, title in chats.items():
         print(f"  MARKETEER_CHAT_ID={cid}    # {title}")
-    print("Люди:")
+    print("Люди (нужны, только если хотите ограничить, кто даёт задания):")
     for uid, name in users.items():
         print(f"  {uid}    # {name}")
-    print("Добавьте в env-файл MARKETEER_CHAT_ID=... и MARKETEER_USER_IDS=id1,id2")
+    print("Добавьте в .env MARKETEER_CHAT_ID=...; MARKETEER_USER_IDS=id1,id2 по желанию")
 
 
 def local_bundle() -> bytes:
@@ -389,7 +388,14 @@ def main() -> int:
                 print(f"  {k}=    # {REQUIRED[k]}")
             return 1
 
-    password = args.password or env.get("MARKETEER_ROOT_PASSWORD") or getpass.getpass(f"пароль root@{host}: ")
+    password = args.password or env.get("MARKETEER_ROOT_PASSWORD")
+    if not password:
+        try:
+            password = getpass.getpass(f"пароль root@{host}: ")
+        except EOFError:
+            password = ""
+    if not password:
+        sys.exit("нет пароля root: передайте -p 'пароль' или добавьте MARKETEER_ROOT_PASSWORD в .env")
 
     ensure_paramiko()
     step(f"подключаюсь к root@{host}")
