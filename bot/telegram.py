@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import re
 from pathlib import Path
@@ -75,6 +76,42 @@ class MarketeerBot:
         self.exit_code = 0
         self.update_requested = False
         self._stopping = False
+        self._bg_task: asyncio.Task | None = None
+        self._migration_file = cfg.data_dir / "chat_migration.json"
+        self._apply_saved_migration()
+
+    # --- миграция группы в супергруппу ------------------------------------
+    # Telegram меняет id чата, когда группа становится супергруппой (например,
+    # после назначения бота админом). Запоминаем новый id, чтобы не молчать.
+
+    def _apply_saved_migration(self) -> None:
+        try:
+            data = json.loads(self._migration_file.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return
+        if data.get("from") == self.cfg.chat_id and isinstance(data.get("to"), int):
+            log.info("Чат %s переехал в %s (сохранённая миграция)", self.cfg.chat_id, data["to"])
+            self.cfg.chat_id = data["to"]
+
+    async def on_migrate(self, update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> None:
+        msg = update.message
+        if msg is None:
+            return
+        old = new = None
+        if msg.migrate_to_chat_id and msg.chat.id == self.cfg.chat_id:
+            old, new = msg.chat.id, msg.migrate_to_chat_id
+        elif msg.migrate_from_chat_id and msg.migrate_from_chat_id == self.cfg.chat_id:
+            old, new = msg.migrate_from_chat_id, msg.chat.id
+        if new is None or new == self.cfg.chat_id:
+            return
+        self.cfg.chat_id = new
+        try:
+            self._migration_file.write_text(json.dumps({"from": old, "to": new}), encoding="utf-8")
+        except OSError as e:
+            log.warning("Не сохранил миграцию чата: %s", e)
+        log.info("Группа %s стала супергруппой %s, продолжаю там", old, new)
+        await self._announce(f"Группа стала супергруппой, у неё новый id. Продолжаю работать здесь. "
+                             f"В .env стоит поправить MARKETEER_CHAT_ID={new}.")
 
     # --- жизненный цикл -------------------------------------------------
 
@@ -91,8 +128,8 @@ class MarketeerBot:
             msg = format_state(state)
             if msg:
                 await self._announce(msg)
-        app.create_task(self._update_loop())
-        log.info("Готов. chat=%s users=%s model=%s", self.cfg.chat_id, sorted(self.cfg.user_ids), self.cfg.model)
+        self._bg_task = asyncio.get_running_loop().create_task(self._update_loop())
+        log.info("Готов. chat=%s users=%s model=%s", self.cfg.chat_id, sorted(self.cfg.user_ids) or "все", self.cfg.model)
 
     async def _announce(self, text: str) -> None:
         try:
@@ -288,7 +325,8 @@ class MarketeerBot:
 
     async def _send_outputs(self, ctx, chat_id: int, reply_to: int, run_dir: Path) -> None:
         files = self.outputs.collect(run_dir)
-        for md in [f for f in files if f.suffix.lower() == ".md"]:
+        # PDF нужен статьям; пост для Telegram остаётся текстом и post.md.
+        for md in [f for f in files if f.suffix.lower() == ".md" and not f.name.lower().startswith("post")]:
             if not md.with_suffix(".pdf").exists():
                 pdf = await asyncio.to_thread(md_to_pdf, md)
                 if pdf:
@@ -321,6 +359,7 @@ def run(cfg: Config) -> int:
     app.add_handler(CommandHandler("version", bot.cmd_version))
     app.add_handler(CommandHandler(["reset", "new"], bot.cmd_reset))
     app.add_handler(CommandHandler("update", bot.cmd_update))
+    app.add_handler(MessageHandler(filters.StatusUpdate.MIGRATE, bot.on_migrate))
     app.add_handler(MessageHandler(filters.Document.ALL | filters.PHOTO, bot.on_file))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, bot.on_text))
     app.run_polling(allowed_updates=Update.ALL_TYPES)
