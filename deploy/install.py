@@ -375,6 +375,7 @@ def main() -> int:
     ap.add_argument("--rebuild", action="store_true", help="пересобрать образ")
     ap.add_argument("--bootstrap", action="store_true", help="заново прогнать подготовку машины")
     ap.add_argument("--discover", action="store_true", help="показать id чатов и людей, которых видит бот")
+    ap.add_argument("--env-check", action="store_true", help="показать имена переменных в .env на сервере (без значений)")
     ap.add_argument("--status", action="store_true")
     ap.add_argument("--logs", action="store_true")
     ap.add_argument("--rollback", action="store_true")
@@ -394,7 +395,7 @@ def main() -> int:
     if not host:
         ap.error("укажите IP VPS или MARKETEER_HOST в env-файле")
 
-    only_ops = args.status or args.logs or args.rollback
+    only_ops = args.status or args.logs or args.rollback or args.env_check
     if not only_ops:
         miss = missing_keys(env)
         if miss:
@@ -420,6 +421,11 @@ def main() -> int:
         sys.exit(f"не подключился: {e}")
 
     try:
+        if args.env_check:
+            step(f"переменные в {APP}/.env (значения скрыты)")
+            r.run(f"sed -nE 's/^([A-Za-z_]+)=(.*)$/  \\1 = <\\2>/p' {APP}/.env | "
+                  "sed -E 's/<[^>]+>/<задано>/; s/<>/<пусто>/'", check=False)
+            return 0
         if args.status:
             status(r); return 0
         if args.logs:
