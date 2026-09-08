@@ -44,7 +44,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 DEFAULT_ENV = str(ROOT / ".env")
-BOT_USER = "marketeer"
+BOT_USER = "iiko_copywriter"
 HOME = f"/home/{BOT_USER}"
 APP = f"{HOME}/app"
 EXCLUDE = {".venv", "__pycache__", "outputs", "uploads", ".DS_Store", ".pytest_cache"}

@@ -2,7 +2,7 @@
 """GitHub для этого репозитория: создать репо, закоммитить и запушить, добавить deploy-ключ бота.
 
   deploy/github.py                       создать репо (если нет), закоммитить всё, запушить main
-  deploy/github.py --name iiko-marketeer имя репо (по умолчанию marketeer)
+  deploy/github.py --name другое-имя    имя репо (по умолчанию iiko-copywriter)
   deploy/github.py --public              публичный вместо приватного
   deploy/github.py --no-commit           только remote и push того, что уже закоммичено
   deploy/github.py --deploy-key 'ssh-ed25519 AAAA...'   добавить read-only deploy-ключ (его печатает install.py)
@@ -68,7 +68,7 @@ def git(*args: str, env: dict | None = None, check: bool = True) -> str:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="GitHub: создать репо, запушить, добавить deploy-ключ")
-    ap.add_argument("--name", default="marketeer")
+    ap.add_argument("--name", default="iiko-copywriter")
     ap.add_argument("--public", action="store_true")
     ap.add_argument("--no-commit", action="store_true")
     ap.add_argument("-m", "--message", default="Бот-маркетолог iiko: код, скиллы, база знаний, деплой")

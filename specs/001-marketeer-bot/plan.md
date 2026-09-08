@@ -11,7 +11,7 @@
 Слой «руки»: Python-бот на `python-telegram-bot`, урезанный мост v2: ловит
 упоминание, кладёт файлы в `uploads/`, зовёт `claude -p`, отправляет в чат
 всё новое из `outputs/`. Слой «ноги»: rootless-контейнер podman под
-пользователем `marketeer`, юнит `systemd --user` с linger, код и знания
+пользователем `iiko_copywriter`, юнит `systemd --user` с linger, код и знания
 смонтированы томом из git-checkout, поэтому обновление кода не требует
 пересборки образа.
 
@@ -99,7 +99,7 @@ ro в `/work/repo` как рабочий каталог Claude. Так моде�
 Ноутбук → VPS (`deploy/install.py`, paramiko): IP и пароль root
 параметрами, всё остальное из `.env` в корне репозитория (файл в
 .gitignore). Заходит только под root, команды
-пользователя `marketeer` гоняет через `runuser -l`. Первый запуск делает
+пользователя `iiko_copywriter` гоняет через `runuser -l`. Первый запуск делает
 bootstrap (podman, пользователь, linger), дальше идемпотентно: код архивом
 с ноутбука или `fetch` из GitHub, `.env`, образ (если изменился
 `Containerfile`), юнит. Юнит `systemd --user` запускает `podman run` в

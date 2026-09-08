@@ -3,7 +3,7 @@
 # Запускается из install.py под root по паролю. Ubuntu 22.04+ / Debian 12+.
 set -euo pipefail
 
-BOT_USER=${BOT_USER:-marketeer}
+BOT_USER=${BOT_USER:-iiko_copywriter}
 PUBKEY=${PUBKEY:-}   # публичный ключ ноутбука, чтобы можно было зайти ssh $BOT_USER@host; необязательно
 
 export DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a

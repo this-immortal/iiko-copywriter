@@ -7,7 +7,7 @@ deploy/install.sh 1.2.3.4 -p 'пароль_root'
 ```
 
 Без `-p` пароль спросит. Скрипт сам: ставит podman, создаёт пользователя
-`marketeer` без sudo, заливает код, кладёт секреты, собирает образ и
+`iiko_copywriter` без sudo, заливает код, кладёт секреты, собирает образ и
 поднимает сервис. Повторный запуск обновляет код и перезапускает бота.
 Нужен только `python3`; библиотека `paramiko` ставится сама в `deploy/.venv`.
 
@@ -66,7 +66,7 @@ deploy/install.sh 1.2.3.4 --rollback   # откатить код на преды
 deploy/install.sh 1.2.3.4 --sync       # залить код с ноутбука, даже если задан GitHub
 ```
 
-Что где лежит на сервере: `/home/marketeer/app/repo` (код), `app/data`
+Что где лежит на сервере: `/home/iiko_copywriter/app/repo` (код), `app/data`
 (uploads, outputs, sessions.json, venv, HOME для Claude Code), `app/.env`
 (600), `app/deploy_key`. В контейнере: `/app/repo` (rw, для git),
 `/work/repo` (ro, рабочий каталог Claude), `/work/data`.
