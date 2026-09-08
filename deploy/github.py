@@ -150,8 +150,12 @@ def main() -> int:
     if out.returncode != 0:
         sys.exit("push не прошёл: " + (out.stderr.strip() or out.stdout.strip())[:600])
     print(f"→ запушил {branch}: {repo['html_url']}")
-    ssh_url = f"git@github.com:{login}/{args.name}.git"
-    print(f"\nДля самообновления бота в .env должна быть строка:\n  MARKETEER_GIT_SSH={ssh_url}")
+    if repo["private"]:
+        print(f"\nДля самообновления бота в .env должна быть строка (плюс deploy-ключ, см. deploy/README.md):\n"
+              f"  MARKETEER_GIT_URL=git@github.com:{login}/{args.name}.git")
+    else:
+        print(f"\nДля самообновления бота в .env должна быть строка (репо публичный, ключ не нужен):\n"
+              f"  MARKETEER_GIT_URL=https://github.com/{login}/{args.name}.git")
     return 0
 
 

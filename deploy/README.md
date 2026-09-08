@@ -34,27 +34,32 @@ YANDEX_PROMPT_ID=...                   # id промпта агента-реда
 
 Необязательные строки: `MARKETEER_USER_IDS` (id через запятую, если отвечать
 только некоторым участникам), `MARKETEER_HOST` (чтобы не писать IP),
-`MARKETEER_ROOT_PASSWORD` (чтобы не спрашивал пароль), `MARKETEER_GIT_SSH`
+`MARKETEER_ROOT_PASSWORD` (чтобы не спрашивал пароль), `MARKETEER_GIT_URL`
 (см. ниже), `CLAUDE_MODEL`, `CLAUDE_MAX_TURNS`, `SESSION_TTL_HOURS`,
 `UPDATE_CHECK_MIN`.
 
 ## Откуда берётся код
 
-Пока строки `MARKETEER_GIT_SSH` нет, код заливается с ноутбука архивом при
+Пока строки `MARKETEER_GIT_URL` нет, код заливается с ноутбука архивом при
 каждом запуске скрипта; команда `/update` в чате не работает.
 
-Репозиторий: `this-immortal/iiko-copywriter`. Чтобы бот обновлялся из него,
-добавьте `MARKETEER_GIT_SSH=git@github.com:this-immortal/iiko-copywriter.git`.
-При первом запуске скрипт напечатает deploy-ключ бота; добавьте его в
-репозиторий одной командой (токен GitHub: строка `GITHUB_PAT` в `.env`):
+Репозиторий `this-immortal/iiko-copywriter` публичный, поэтому боту хватает
+https-адреса без ключей:
 
-```bash
-deploy/github.py --name iiko-copywriter --deploy-key 'ssh-ed25519 AAAA... marketeer-deploy'
+```
+MARKETEER_GIT_URL=https://github.com/this-immortal/iiko-copywriter.git
 ```
 
-и запустите установку ещё раз. Дальше бот обновляется сам: по `/update` и
-по опросу раз в 15 минут. Тот же `deploy/github.py` без параметров коммитит
-и пушит текущее состояние проекта.
+Дальше бот обновляется сам: по `/update` и по опросу раз в 15 минут.
+
+Если репо станет приватным, укажите ssh-адрес
+`git@github.com:this-immortal/iiko-copywriter.git`. Установщик напечатает
+deploy-ключ бота, его нужно добавить в репозиторий: Settings → Deploy keys →
+Add deploy key, без права записи. Через API (`deploy/github.py --deploy-key`)
+это получится, только если у токена есть право «Administration» на репо.
+
+`deploy/github.py` без параметров коммитит и пушит текущее состояние проекта
+(токен: строка `GITHUB_PAT` в `.env`).
 
 ## Полезное
 

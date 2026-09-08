@@ -16,9 +16,12 @@
   YANDEX_API_KEY           ключ Яндекса (вычитка)
   YANDEX_PROJECT_ID        id каталога Яндекс Облака
   YANDEX_PROMPT_ID         id сохранённого промпта агента-редактора Яндекса
-  MARKETEER_GIT_SSH        необязательно: git@github.com:USER/marketeer.git — тогда код
-                           берётся из GitHub и работает самообновление; без него код
-                           заливается с ноутбука архивом
+  MARKETEER_GIT_URL        необязательно: адрес репозитория, тогда код берётся из GitHub
+                           и работает самообновление. Для публичного репо достаточно
+                           https://github.com/USER/REPO.git без ключей; для приватного
+                           git@github.com:USER/REPO.git плюс deploy-ключ (скрипт его
+                           напечатает). Без строки код заливается с ноутбука архивом.
+                           (Старое имя MARKETEER_GIT_SSH тоже принимается.)
   MARKETEER_ROOT_PASSWORD  необязательно: чтобы не спрашивал пароль
   MARKETEER_HOST           необязательно: чтобы не передавать IP
 
@@ -290,7 +293,12 @@ else
 fi
 git -C {APP}/repo rev-parse --short HEAD""", user=BOT_USER, check=False)
     if "fatal" in out or "denied" in out.lower():
-        print("\nGitHub не пустил. Добавьте deploy-ключ бота в репозиторий (Settings → Deploy keys, read-only):\n  " + pub)
+        print("\nGitHub не пустил. Два варианта:\n"
+              "  1) репо публичный: укажите в .env https-адрес, ключ не нужен:\n"
+              f"     MARKETEER_GIT_URL={repo_ssh.replace('git@github.com:', 'https://github.com/')}\n"
+              "  2) репо приватный: добавьте deploy-ключ бота в репозиторий\n"
+              "     (Settings → Deploy keys → Add deploy key, без записи):\n"
+              f"     {pub}")
         sys.exit(2)
 
 
@@ -421,13 +429,13 @@ def main() -> int:
         else:
             print("  машина уже подготовлена")
         ensure_dirs(r)
-        repo_ssh = env.get("MARKETEER_GIT_SSH")
-        if repo_ssh and not args.sync:
-            code_from_github(r, repo_ssh, env.get("MARKETEER_GIT_BRANCH", "main"))
+        repo_url = env.get("MARKETEER_GIT_URL") or env.get("MARKETEER_GIT_SSH")
+        if repo_url and not args.sync:
+            code_from_github(r, repo_url, env.get("MARKETEER_GIT_BRANCH", "main"))
         else:
             code_from_laptop(r)
-            if not repo_ssh:
-                print("  (MARKETEER_GIT_SSH не задан: /update в чате работать не будет, обновляйте этим скриптом)")
+            if not repo_url:
+                print("  (MARKETEER_GIT_URL не задан: /update в чате работать не будет, обновляйте этим скриптом)")
         write_env(r, env)
         build_image(r, args.rebuild)
         install_unit(r)
