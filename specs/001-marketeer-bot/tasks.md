@@ -24,7 +24,7 @@
 - [ ] T-10. (написано, ждёт VPS) `deploy/Containerfile`: python 3.12, node, Claude Code через native installer, pandoc, WeasyPrint с зависимостями, шрифты → `podman build` проходит на VPS (R-12)
 - [ ] T-11. (написано, ждёт VPS) `deploy/entrypoint.sh`: venv по хэшу `requirements.txt`, цикл запуска бота, обработка кода 75, `state.json` → ручной прогон в контейнере (R-13, R-14)
 - [ ] T-12. (написано, ждёт VPS) `deploy/bootstrap.sh` (sudo, один раз): podman, git, пользователь `marketeer`, linger, ключ с ноутбука → `podman info` под `marketeer` работает (R-12)
-- [ ] T-13. (написано, ждёт VPS) `deploy/install.py` с ноутбука: IP и пароль root параметрами, остальное из `~/.config/nano-banana/.env`; bootstrap, код архивом или из GitHub, `.env` на сервере, сборка, юнит `systemd --user` → критерий 1 из спеки (R-12, R-15, R-16)
+- [ ] T-13. (написано, ждёт VPS) `deploy/install.py` с ноутбука: IP и пароль root параметрами, остальное из `.env` в корне репо; bootstrap, код архивом или из GitHub, `.env` на сервере, сборка, юнит `systemd --user` → критерий 1 из спеки (R-12, R-15, R-16)
 - [ ] T-14. (написано, ждёт GitHub) `bot/updater.py`: `/update` → выход 75; опрос `git ls-remote` раз в 15 минут при простое; сообщение в чат после старта из `state.json` → критерий 8 (R-13)
 - [ ] T-15. (написано, ждёт GitHub) Откат в супервизоре: падение раньше 90 с после обновления → `reset --hard` на прежний коммит, `state.json` → критерий 9 (R-14)
 

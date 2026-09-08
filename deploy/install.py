@@ -6,15 +6,15 @@
   deploy/install.py 1.2.3.4 --discover         показать id чатов и людей, которых видит бот
   deploy/install.py 1.2.3.4 --status | --logs | --rollback | --rebuild | --bootstrap
 
-Всё остальное берётся из ~/.config/nano-banana/.env (переопределить: --env ПУТЬ):
+Всё остальное берётся из файла .env в корне репозитория (переопределить: --env ПУТЬ):
 
   MARKETEER_BOT_TOKEN      токен бота от @BotFather
   MARKETEER_CHAT_ID        id группы            (узнать: --discover)
   MARKETEER_USER_IDS       id людей через запятую (узнать: --discover)
   CLAUDE_CODE_OAUTH_TOKEN  токен подписки Claude: команда `claude setup-token`
-  GEMINI_API_KEY           уже есть
-  YANDEX_API_KEY           уже есть
-  YANDEX_PROJECT_ID        уже есть: id каталога Яндекс Облака
+  GEMINI_API_KEY           ключ Gemini (картинки)
+  YANDEX_API_KEY           ключ Яндекса (вычитка)
+  YANDEX_PROJECT_ID        id каталога Яндекс Облака
   YANDEX_PROMPT_ID         id сохранённого промпта агента-редактора Яндекса
   MARKETEER_GIT_SSH        необязательно: git@github.com:USER/marketeer.git — тогда код
                            берётся из GitHub и работает самообновление; без него код
@@ -43,7 +43,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
-DEFAULT_ENV = "~/.config/nano-banana/.env"
+DEFAULT_ENV = str(ROOT / ".env")
 BOT_USER = "marketeer"
 HOME = f"/home/{BOT_USER}"
 APP = f"{HOME}/app"

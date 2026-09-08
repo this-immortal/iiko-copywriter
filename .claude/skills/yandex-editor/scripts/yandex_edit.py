@@ -18,7 +18,7 @@ Responses API на ai.api.cloud.yandex.net) и печатает отредакт
     python3 yandex_edit.py --instruction "Сократи вдвое" --file text.md
     echo "текст" | python3 yandex_edit.py --edit --out result.md
 
-Конфигурация (берётся из окружения или из ~/.config/nano-banana/.env):
+Конфигурация (берётся из окружения или из файла .env в текущем каталоге):
     YANDEX_API_KEY    — ключ API Яндекса (обязательно)
     YANDEX_PROJECT_ID — id каталога Яндекс Облака (обязательно; принимается и YANDEX_PROJECT)
     YANDEX_PROMPT_ID  — id сохранённого промпта агента-редактора (обязательно)
@@ -31,7 +31,7 @@ import sys
 import urllib.error
 import urllib.request
 
-ENV_FILE = os.path.expanduser("~/.config/nano-banana/.env")
+ENV_FILE = os.path.join(os.getcwd(), ".env")
 DEFAULT_BASE_URL = "https://ai.api.cloud.yandex.net/v1"
 
 EDIT_INSTRUCTION = (

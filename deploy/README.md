@@ -11,17 +11,20 @@ deploy/install.sh 1.2.3.4 -p 'пароль_root'
 поднимает сервис. Повторный запуск обновляет код и перезапускает бота.
 Нужен только `python3`; библиотека `paramiko` ставится сама в `deploy/.venv`.
 
-## Что должно лежать в `~/.config/nano-banana/.env`
+## Файл `.env` в корне репозитория
 
-Файл уже есть, в нём ключи Gemini и Яндекса и `YANDEX_PROJECT_ID`. Добавьте
-строки:
+Все ключи и настройки лежат в `.env` рядом с кодом. Файл в `.gitignore`, в
+репозиторий не попадает. Обязательные строки:
 
 ```
 MARKETEER_BOT_TOKEN=123456:ABC...      # токен от @BotFather
 MARKETEER_CHAT_ID=-1001234567890       # id группы
 MARKETEER_USER_IDS=11111111,22222222   # кто может давать задания
 CLAUDE_CODE_OAUTH_TOKEN=...            # результат команды `claude setup-token`
-YANDEX_PROMPT_ID=...                   # id промпта агента-редактора в Яндекс Облаке
+GEMINI_API_KEY=...                     # картинки
+YANDEX_API_KEY=...                     # вычитка статей
+YANDEX_PROJECT_ID=...                  # id каталога Яндекс Облака
+YANDEX_PROMPT_ID=...                   # id промпта агента-редактора
 ```
 
 Если чего-то нет, скрипт скажет, каких строк не хватает, и ничего не будет
@@ -43,7 +46,7 @@ YANDEX_PROMPT_ID=...                   # id промпта агента-реда
 Репозиторий: `this-immortal/iiko-copywriter`. Чтобы бот обновлялся из него,
 добавьте `MARKETEER_GIT_SSH=git@github.com:this-immortal/iiko-copywriter.git`.
 При первом запуске скрипт напечатает deploy-ключ бота; добавьте его в
-репозиторий одной командой (токен GitHub лежит в `.secrets`):
+репозиторий одной командой (токен GitHub: строка `GITHUB_PAT` в `.env`):
 
 ```bash
 deploy/github.py --name iiko-copywriter --deploy-key 'ssh-ed25519 AAAA... marketeer-deploy'

@@ -4,8 +4,7 @@
 
 Использует стабильный generateContent REST-эндпоинт, без внешних зависимостей
 (только стандартная библиотека). Ключ берётся из переменной окружения
-GEMINI_API_KEY, либо из .env-файла (--env-file, ./.env,
-~/.config/nano-banana/.env).
+GEMINI_API_KEY, либо из .env-файла (--env-file или ./.env в рабочем каталоге).
 
 Примеры:
     python3 generate_image.py --prompt "A cozy coffee bar, warm light" \
@@ -40,15 +39,14 @@ def load_env_file(path):
 
 
 def resolve_api_key(explicit_env_path=None):
-    """Ищет GEMINI_API_KEY: переменная окружения -> --env-file -> ./.env ->
-    ~/.config/nano-banana/.env. Возвращает ключ или пустую строку."""
+    """Ищет GEMINI_API_KEY: переменная окружения -> --env-file -> ./.env.
+    Возвращает ключ или пустую строку."""
     if os.environ.get("GEMINI_API_KEY", "").strip():
         return os.environ["GEMINI_API_KEY"].strip()
     candidates = []
     if explicit_env_path:
         candidates.append(explicit_env_path)
     candidates.append(os.path.join(os.getcwd(), ".env"))
-    candidates.append(os.path.expanduser("~/.config/nano-banana/.env"))
     for path in candidates:
         load_env_file(path)
         if os.environ.get("GEMINI_API_KEY", "").strip():
@@ -98,7 +96,6 @@ def main():
                  "  - переменная окружения:  export GEMINI_API_KEY=...\n"
                  "  - файл --env-file путь/к/.env  со строкой  GEMINI_API_KEY=...\n"
                  "  - файл ./.env в рабочем каталоге\n"
-                 "  - файл ~/.config/nano-banana/.env\n"
                  "Ключ можно получить на https://aistudio.google.com/apikey")
 
     if args.aspect_ratio not in VALID_RATIOS:

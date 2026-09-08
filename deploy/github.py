@@ -7,8 +7,8 @@
   deploy/github.py --no-commit           только remote и push того, что уже закоммичено
   deploy/github.py --deploy-key 'ssh-ed25519 AAAA...'   добавить read-only deploy-ключ (его печатает install.py)
 
-Токен берётся из файла .secrets в корне репозитория: строка GITHUB_PAT=... или просто
-токен первой строкой. Файл в .gitignore. Токен в вывод не попадает.
+Токен: строка GITHUB_PAT=... в .env в корне репозитория (или в .secrets, там можно и просто
+токеном первой строкой). Оба файла в .gitignore. Токен в вывод не попадает.
 """
 from __future__ import annotations
 
@@ -27,16 +27,17 @@ API = "https://api.github.com"
 
 
 def read_token() -> str:
-    p = ROOT / ".secrets"
-    if not p.is_file():
-        sys.exit("нет файла .secrets в корне репозитория")
-    text = p.read_text(encoding="utf-8")
-    m = re.search(r"^\s*GITHUB_PAT\s*=\s*['\"]?([A-Za-z0-9_]+)", text, re.M)
-    if not m:
-        m = re.search(r"\b((?:github_pat_|ghp_)[A-Za-z0-9_]+)", text)
-    if not m:
-        sys.exit("в .secrets не нашёл GITHUB_PAT")
-    return m.group(1)
+    for name in (".env", ".secrets"):
+        p = ROOT / name
+        if not p.is_file():
+            continue
+        text = p.read_text(encoding="utf-8")
+        m = re.search(r"^\s*GITHUB_PAT\s*=\s*['\"]?([A-Za-z0-9_]+)", text, re.M)
+        if not m and name == ".secrets":
+            m = re.search(r"\b((?:github_pat_|ghp_)[A-Za-z0-9_]+)", text)
+        if m:
+            return m.group(1)
+    sys.exit("не нашёл GITHUB_PAT ни в .env, ни в .secrets в корне репозитория")
 
 
 def api(token: str, method: str, path: str, body: dict | None = None) -> tuple[int, dict]:
@@ -150,7 +151,7 @@ def main() -> int:
         sys.exit("push не прошёл: " + (out.stderr.strip() or out.stdout.strip())[:600])
     print(f"→ запушил {branch}: {repo['html_url']}")
     ssh_url = f"git@github.com:{login}/{args.name}.git"
-    print(f"\nДля самообновления бота добавьте в ~/.config/nano-banana/.env строку:\n  MARKETEER_GIT_SSH={ssh_url}")
+    print(f"\nДля самообновления бота в .env должна быть строка:\n  MARKETEER_GIT_SSH={ssh_url}")
     return 0
 
 
