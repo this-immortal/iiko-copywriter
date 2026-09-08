@@ -24,3 +24,7 @@ deploy/local.env
 outputs/
 uploads/
 deploy/.venv/
+
+# исходники и результаты конвертации материалов (книга, не для публичного репо)
+materials/in/
+materials/out/
