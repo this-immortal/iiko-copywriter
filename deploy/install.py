@@ -70,12 +70,16 @@ def ensure_paramiko() -> None:
         pass
     venv = HERE / ".venv"
     py = venv / "bin" / "python"
-    if Path(sys.executable).resolve() == py.resolve():
+    # Внутри venv sys.prefix указывает на сам venv. Сравнивать sys.executable нельзя:
+    # симлинк .venv/bin/python разрешается в тот же системный интерпретатор.
+    if Path(sys.prefix).resolve() == venv.resolve():
         sys.exit("paramiko не импортируется даже из deploy/.venv; удалите deploy/.venv и повторите")
-    print("→ ставлю paramiko в deploy/.venv (один раз)")
     if not py.exists():
+        print("→ создаю deploy/.venv и ставлю paramiko (один раз)")
         subprocess.run([sys.executable, "-m", "venv", str(venv)], check=True)
-    subprocess.run([str(py), "-m", "pip", "install", "-q", "paramiko"], check=True)
+    if subprocess.run([str(py), "-c", "import paramiko"], capture_output=True).returncode != 0:
+        print("→ ставлю paramiko в deploy/.venv")
+        subprocess.run([str(py), "-m", "pip", "install", "-q", "paramiko"], check=True)
     os.execv(str(py), [str(py)] + sys.argv)
 
 
