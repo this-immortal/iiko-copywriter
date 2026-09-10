@@ -341,10 +341,31 @@ def install_unit(r: Remote) -> None:
           user=BOT_USER)
 
 
-def status(r: Remote) -> None:
+def status(r: Remote, tail: int = 30) -> None:
     step("состояние")
     r.run("systemctl --user --no-pager -l status marketeer | head -8 || true\n"
-          "echo\npodman logs --tail 30 marketeer 2>&1 || echo '  контейнер ещё не запущен'", user=BOT_USER, check=False)
+          "echo\necho '  контейнер:' $(podman ps --filter name=marketeer --format '{{.Status}}' 2>/dev/null || echo 'нет')\n"
+          "echo '  процесс бота:' $(podman exec marketeer pgrep -af 'python -m bot' 2>/dev/null | head -1 || echo 'не найден')\n"
+          f"echo\npodman logs --tail {int(tail)} marketeer 2>&1 || echo '  контейнер ещё не запущен'", user=BOT_USER, check=False)
+
+
+def ping(token: str) -> int:
+    """Длинный опрос getUpdates: если бот работает, Telegram оборвёт наш запрос с 409 Conflict."""
+    url = f"https://api.telegram.org/bot{token}/getUpdates?timeout=25"
+    step("пинг Telegram (до 25 секунд)")
+    try:
+        with urllib.request.urlopen(url, timeout=40) as r:
+            data = json.loads(r.read().decode())
+    except urllib.error.HTTPError as e:
+        if e.code == 409:
+            print("  бот жив: Telegram сообщает, что другой экземпляр (наш бот) уже забирает обновления")
+            return 0
+        print(f"  Telegram ответил {e.code}: {e.read().decode(errors='replace')[:200]}")
+        return 1
+    n = len(data.get("result", []))
+    print(f"  за 25 секунд конфликта не было, необработанных обновлений: {n}. "
+          "Скорее всего бот НЕ опрашивает Telegram: проверьте --status и --logs")
+    return 1
 
 
 def logs(r: Remote) -> None:
@@ -375,6 +396,7 @@ def main() -> int:
     ap.add_argument("--rebuild", action="store_true", help="пересобрать образ")
     ap.add_argument("--bootstrap", action="store_true", help="заново прогнать подготовку машины")
     ap.add_argument("--discover", action="store_true", help="показать id чатов и людей, которых видит бот")
+    ap.add_argument("--ping", action="store_true", help="проверить снаружи, забирает ли бот обновления из Telegram")
     ap.add_argument("--env-check", action="store_true", help="показать имена переменных в .env на сервере (без значений)")
     ap.add_argument("--status", action="store_true")
     ap.add_argument("--logs", action="store_true")
@@ -384,10 +406,12 @@ def main() -> int:
     env_path = Path(args.env).expanduser()
     env = load_env(env_path)
 
-    if args.discover:
+    if args.discover or args.ping:
         token = env.get("MARKETEER_BOT_TOKEN")
         if not token:
             sys.exit(f"Добавьте MARKETEER_BOT_TOKEN=... в {env_path}")
+        if args.ping:
+            return ping(token)
         discover(token)
         return 0
 
