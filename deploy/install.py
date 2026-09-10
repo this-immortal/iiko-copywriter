@@ -399,6 +399,7 @@ def main() -> int:
     ap.add_argument("--ping", action="store_true", help="проверить снаружи, забирает ли бот обновления из Telegram")
     ap.add_argument("--env-check", action="store_true", help="показать имена переменных в .env на сервере (без значений)")
     ap.add_argument("--status", action="store_true")
+    ap.add_argument("--tail", type=int, default=30, help="сколько строк лога показать в --status")
     ap.add_argument("--logs", action="store_true")
     ap.add_argument("--rollback", action="store_true")
     args = ap.parse_args()
@@ -451,7 +452,7 @@ def main() -> int:
                   "sed -E 's/<[^>]+>/<задано>/; s/<>/<пусто>/'", check=False)
             return 0
         if args.status:
-            status(r); return 0
+            status(r, args.tail); return 0
         if args.logs:
             logs(r); return 0
         if args.rollback:

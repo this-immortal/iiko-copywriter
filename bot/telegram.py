@@ -5,6 +5,7 @@ import asyncio
 import json
 import logging
 import re
+import time
 from pathlib import Path
 
 from telegram import BotCommand, Update
@@ -30,6 +31,8 @@ HELP = (
     "• вычитать вашу статью;\n"
     "• формулировки для интерфейса: кнопки, сообщения, пустые состояния (можно со скриншотом);\n"
     "• картинку по описанию или доработку присланной.\n\n"
+    "Длинный текст (оглавление, черновик статьи) лучше прислать файлом .txt, .md или .docx: "
+    "Telegram режет сообщения длиннее 4096 знаков, куски я склеиваю, но файл надёжнее.\n\n"
     "Команды: /reset — начать диалог заново, /version — версия, "
     "/update — обновиться из репозитория (только администраторы бота)."
 )
@@ -71,6 +74,44 @@ def is_admin(user_id: int | None, cfg: Config) -> bool:
     return user_id is not None and user_id in cfg.admin_ids
 
 
+class PartsBuffer:
+    """Склейка длинных сообщений. Telegram режет текст длиннее 4096 знаков на несколько
+    сообщений, а упоминание бота остаётся только в одном из них. Куски того же автора,
+    пришедшие за несколько секунд до или после адресованного сообщения, считаем частями
+    одного запроса."""
+
+    def __init__(self, before_sec: float = 8.0, after_sec: float = 3.0, max_wait: float = 12.0):
+        self.before_sec, self.after_sec, self.max_wait = before_sec, after_sec, max_wait
+        self._recent: dict[tuple, list[tuple[float, str]]] = {}
+        self._pending: dict[tuple, list[str]] = {}
+
+    def note(self, key: tuple, text: str, now: float) -> bool:
+        """Неадресованное сообщение. True, если оно ушло в открытый сбор по этому автору."""
+        if key in self._pending:
+            self._pending[key].append(text)
+            return True
+        items = [(ts, t) for ts, t in self._recent.get(key, []) if now - ts <= self.before_sec]
+        items.append((now, text))
+        self._recent[key] = items
+        return False
+
+    def start(self, key: tuple, prompt: str, now: float) -> bool:
+        """Адресованное сообщение. True, если открыт новый сбор (нужно подождать хвост и запустить);
+        False, если сбор уже идёт и текст просто добавлен."""
+        if key in self._pending:
+            self._pending[key].append(prompt)
+            return False
+        preceding = [t for ts, t in self._recent.pop(key, []) if now - ts <= self.before_sec]
+        self._pending[key] = preceding + [prompt]
+        return True
+
+    def count(self, key: tuple) -> int:
+        return len(self._pending.get(key, []))
+
+    def finish(self, key: tuple) -> str:
+        return "\n".join(self._pending.pop(key, []))
+
+
 class MarketeerBot:
     def __init__(self, cfg: Config):
         self.cfg = cfg
@@ -85,6 +126,7 @@ class MarketeerBot:
         self._bg_task: asyncio.Task | None = None
         self._migration_file = cfg.data_dir / "chat_migration.json"
         self._apply_saved_migration()
+        self.parts = PartsBuffer()
 
     # --- миграция группы в супергруппу ------------------------------------
     # Telegram меняет id чата, когда группа становится супергруппой (например,
@@ -136,6 +178,13 @@ class MarketeerBot:
                 await self._announce(msg)
         self._bg_task = asyncio.get_running_loop().create_task(self._update_loop())
         log.info("Готов. chat=%s users=%s model=%s", self.cfg.chat_id, sorted(self.cfg.user_ids) or "все", self.cfg.model)
+
+    async def on_error(self, update: object, ctx: ContextTypes.DEFAULT_TYPE) -> None:
+        err = ctx.error
+        if err.__class__.__name__ == "Conflict":
+            log.warning("Telegram: параллельный getUpdates (другой экземпляр или проверка --ping); продолжаю")
+            return
+        log.error("Ошибка в обработчике: %s: %s", err.__class__.__name__, err)
 
     async def _announce(self, text: str) -> None:
         try:
@@ -235,12 +284,32 @@ class MarketeerBot:
             return
         reply_from = msg.reply_to_message.from_user.id if msg.reply_to_message and msg.reply_to_message.from_user else None
         prompt = extract_prompt(msg.text, msg.entities, ctx.bot.username, ctx.bot.id, reply_from)
+        key = (update.effective_chat.id, update.effective_user.id)
+        now = time.monotonic()
         if prompt is None:
+            # Не адресовано боту. Может оказаться куском длинного сообщения: запоминаем.
+            if self.parts.note(key, msg.text or "", now):
+                log.info("Добавил кусок (%d знаков) к запросу %s", len(msg.text or ""), key)
             return
-        if not prompt:
+        if not self.parts.start(key, prompt, now):
+            log.info("Добавил адресованный кусок к запросу %s", key)
+            return
+        # Ждём хвост длинного сообщения: Telegram присылает куски за секунды.
+        waited = 0.0
+        seen = self.parts.count(key)
+        while waited < self.parts.max_wait:
+            await asyncio.sleep(self.parts.after_sec)
+            waited += self.parts.after_sec
+            if self.parts.count(key) == seen:
+                break
+            seen = self.parts.count(key)
+        full = self.parts.finish(key)
+        if not full.strip():
             await msg.reply_text("Да? Напишите, что нужно сделать.")
             return
-        await self.execute(update, ctx, prompt, [])
+        if seen > 1:
+            log.info("Склеил %d кусков, всего %d знаков", seen, len(full))
+        await self.execute(update, ctx, full, [])
 
     async def on_file(self, update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> None:
         if not self._auth(update):
@@ -371,6 +440,7 @@ def run(cfg: Config) -> int:
     app.add_handler(MessageHandler(filters.StatusUpdate.MIGRATE, bot.on_migrate))
     app.add_handler(MessageHandler(filters.Document.ALL | filters.PHOTO, bot.on_file))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, bot.on_text))
+    app.add_error_handler(bot.on_error)
     app.run_polling(allowed_updates=Update.ALL_TYPES)
     log.info("Выход с кодом %s", bot.exit_code)
     return bot.exit_code
